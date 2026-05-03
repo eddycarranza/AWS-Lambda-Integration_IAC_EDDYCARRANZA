@@ -1,0 +1,10 @@
+{
+  "name": "crop-lambda",
+  "version": "1.0.0",
+  "description": "Recorta imagen a 40x40 PNG circular con fondo transparente",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "sharp": "^0.33.0"
+  }
+}
