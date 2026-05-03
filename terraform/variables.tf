@@ -52,13 +52,13 @@ variable "private_subnet_az_b_cidr" {
 variable "upload_lambda_zip" {
   description = "Ruta al ZIP de upload-lambda"
   type        = string
-  default     = "dist/upload-lambda.zip"
+  default     = "../dist/upload-lambda.zip"
 }
 
 variable "crop_lambda_zip" {
   description = "Ruta al ZIP de crop-lambda"
   type        = string
-  default     = "dist/crop-lambda.zip"
+  default     = "../dist/crop-lambda.zip"
 }
 
 # ── Alertas ───────────────────────────────────

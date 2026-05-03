@@ -1,8 +1,7 @@
-# ─────────────────────────────────────────────
-#  api_gateway.tf — HTTP API Gateway v2
-# ─────────────────────────────────────────────
 
-# ── Log group para API Gateway ────────────────
+#  api_gateway.tf — HTTP API Gateway v2
+
+# Log group para API Gateway
 resource "aws_cloudwatch_log_group" "api_gw" {
   name              = "/aws/apigateway/${local.api_name}"
   retention_in_days = 14
@@ -25,7 +24,7 @@ resource "aws_apigatewayv2_api" "main" {
   tags = { Name = local.api_name }
 }
 
-# ── Integración Lambda proxy ──────────────────
+#  Integración Lambda proxy 
 resource "aws_apigatewayv2_integration" "upload" {
   api_id                 = aws_apigatewayv2_api.main.id
   integration_type       = "AWS_PROXY"
@@ -41,7 +40,7 @@ resource "aws_apigatewayv2_route" "upload" {
   target    = "integrations/${aws_apigatewayv2_integration.upload.id}"
 }
 
-# ── Stage $default con auto-deploy ───────────
+# Stage $default con auto-deploy 
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.main.id
   name        = "$default"
@@ -70,7 +69,7 @@ resource "aws_apigatewayv2_stage" "default" {
   tags = { Name = "${local.api_name}-stage" }
 }
 
-# ── Permiso: API Gateway invoca upload-lambda ─
+# Permiso: API Gateway invoca upload-lambda 
 resource "aws_lambda_permission" "apigw_upload" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
