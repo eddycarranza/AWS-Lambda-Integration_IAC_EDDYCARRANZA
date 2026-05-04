@@ -1,38 +1,22 @@
-# ─────────────────────────────────────────────
-#  lambda.tf — Funciones Lambda
-# ─────────────────────────────────────────────
-
-# ── Log groups (se crean primero para controlar retención) ──
 resource "aws_cloudwatch_log_group" "upload_lambda" {
   name              = "/aws/lambda/${local.upload_fn_name}"
   retention_in_days = 14
-  tags              = { Name = "${local.upload_fn_name}-logs" }
 }
 
 resource "aws_cloudwatch_log_group" "crop_lambda" {
   name              = "/aws/lambda/${local.crop_fn_name}"
   retention_in_days = 14
-  tags              = { Name = "${local.crop_fn_name}-logs" }
 }
 
-# ════════════════════════════════════════════
-#  upload-lambda
-# ════════════════════════════════════════════
 resource "aws_lambda_function" "upload" {
-  function_name = local.upload_fn_name
-  filename      = var.upload_lambda_zip
-  handler       = "index.handler"
-  runtime       = "nodejs20.x"
-  role          = aws_iam_role.upload_lambda.arn
-  memory_size   = 256
-  timeout       = 30
-
+  function_name    = local.upload_fn_name
+  filename         = var.upload_lambda_zip
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  role             = aws_iam_role.upload_lambda.arn
+  memory_size      = 256
+  timeout          = 30
   source_code_hash = filebase64sha256(var.upload_lambda_zip)
-
-  vpc_config {
-    subnet_ids         = [aws_subnet.private_az_a.id, aws_subnet.private_az_b.id]
-    security_group_ids = [aws_security_group.upload_lambda.id]
-  }
 
   environment {
     variables = {
@@ -45,28 +29,17 @@ resource "aws_lambda_function" "upload" {
     aws_iam_role_policy_attachment.upload_basic,
     aws_iam_role_policy.upload_s3,
   ]
-
-  tags = { Name = local.upload_fn_name }
 }
 
-# ════════════════════════════════════════════
-#  crop-lambda
-# ════════════════════════════════════════════
 resource "aws_lambda_function" "crop" {
-  function_name = local.crop_fn_name
-  filename      = var.crop_lambda_zip
-  handler       = "index.handler"
-  runtime       = "nodejs20.x"
-  role          = aws_iam_role.crop_lambda.arn
-  memory_size   = 512
-  timeout       = 60
-
+  function_name    = local.crop_fn_name
+  filename         = var.crop_lambda_zip
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  role             = aws_iam_role.crop_lambda.arn
+  memory_size      = 512
+  timeout          = 60
   source_code_hash = filebase64sha256(var.crop_lambda_zip)
-
-  vpc_config {
-    subnet_ids         = [aws_subnet.private_az_a.id, aws_subnet.private_az_b.id]
-    security_group_ids = [aws_security_group.crop_lambda.id]
-  }
 
   environment {
     variables = {
@@ -80,17 +53,12 @@ resource "aws_lambda_function" "crop" {
     aws_iam_role_policy_attachment.crop_basic,
     aws_iam_role_policy.crop_s3_sqs,
   ]
-
-  tags = { Name = local.crop_fn_name }
 }
 
-# ── Event Source Mapping: SQS → crop-lambda ──
 resource "aws_lambda_event_source_mapping" "sqs_to_crop" {
-  event_source_arn                   = aws_sqs_queue.main.arn
-  function_name                      = aws_lambda_function.crop.arn
-  batch_size                         = 5
-  maximum_batching_window_in_seconds = 0
-  enabled                            = true
-
+  event_source_arn        = aws_sqs_queue.main.arn
+  function_name           = aws_lambda_function.crop.arn
+  batch_size              = 5
+  enabled                 = true
   function_response_types = ["ReportBatchItemFailures"]
 }
